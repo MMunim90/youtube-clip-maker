@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Clip Maker",
+  "version": "1.0.0",
+  "description": "Record selected portions of browser tab playback.",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "downloads"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html"
+  },
+  "background": {
+    "service_worker": "background/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "content/content.js"
+      ]
+    }
+  ]
+}
