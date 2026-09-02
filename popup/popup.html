@@ -1,56 +1,69 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>YouTube Clip Maker</title>
+    <title>YouTube Clip Maker</title>
 
-  <link rel="stylesheet" href="popup.css">
-</head>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
 
-<body>
+  <body>
+    <div class="container">
+      <h1>YouTube Clip Maker</h1>
 
-  <div class="container">
+      <div class="status">
+        <span>Status:</span>
+        <span id="status">Ready</span>
+      </div>
 
-    <h1>YouTube Clip Maker</h1>
+      <button id="detectVideo">Detect YouTube Video</button>
 
-    <div class="status">
-      <span>Status:</span>
-      <span id="status">Ready</span>
+      <div class="video-info">
+        <p>
+          Duration:
+          <span id="duration">--</span>
+        </p>
+
+        <p>
+          Current Time:
+          <span id="currentTime">--</span>
+        </p>
+      </div>
+
+      <div class="time-section">
+        <label for="startTime"> Start Time </label>
+
+        <input type="text" id="startTime" placeholder="01:30" />
+
+        <label for="endTime"> End Time </label>
+
+        <input type="text" id="endTime" placeholder="02:45" />
+      </div>
+
+      <div class="recording-type">
+        <p>Recording Type</p>
+
+        <label>
+          <input type="radio" name="recordingType" value="video" checked />
+
+          Video + Audio
+        </label>
+
+        <label>
+          <input type="radio" name="recordingType" value="audio" />
+
+          Audio Only
+        </label>
+      </div>
+
+      <button id="startRecording">Start Recording</button>
+
+      <button id="stopRecording">Stop Recording</button>
     </div>
 
-    <div class="video-info">
-
-      <p>
-        Duration:
-        <span id="duration">--</span>
-      </p>
-
-      <p>
-        Current Time:
-        <span id="currentTime">--</span>
-      </p>
-
-    </div>
-
-    <button id="detectVideo">
-      Detect YouTube Video
-    </button>
-
-    <button id="startRecording">
-      Start Recording
-    </button>
-
-    <button id="stopRecording">
-      Stop Recording
-    </button>
-
-  </div>
-
-  <script src="popup.js"></script>
-
-</body>
-
+    <script src="popup.js"></script>
+  </body>
 </html>

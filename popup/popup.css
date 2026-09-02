@@ -2,7 +2,9 @@ body {
   margin: 0;
   padding: 0;
   width: 320px;
+
   font-family: Arial, sans-serif;
+
   background: #f5f5f5;
 }
 
@@ -12,34 +14,116 @@ body {
 
 h1 {
   margin-top: 0;
+
   font-size: 20px;
+
   text-align: center;
 }
 
 .status {
   display: flex;
+
   justify-content: space-between;
+
   margin-bottom: 15px;
+
   padding: 10px;
+
   background: white;
+
   border-radius: 8px;
 }
 
 .video-info {
   margin-bottom: 15px;
+
   padding: 12px;
+
   background: white;
+
   border-radius: 8px;
+}
+
+.video-info p {
+  margin: 6px 0;
+}
+
+.time-section {
+  padding: 12px;
+
+  background: white;
+
+  border-radius: 8px;
+
+  margin-bottom: 10px;
+}
+
+.time-section label {
+  display: block;
+
+  margin-top: 8px;
+
+  margin-bottom: 5px;
+
+  font-size: 13px;
+}
+
+.time-section input {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 10px;
+
+  border: 1px solid #ccc;
+
+  border-radius: 6px;
+
+  font-size: 14px;
 }
 
 button {
   width: 100%;
+
   padding: 12px;
+
   margin-top: 8px;
 
   border: none;
+
   border-radius: 8px;
 
   cursor: pointer;
+
   font-size: 14px;
+}
+
+.recording-type {
+  margin-bottom: 15px;
+  padding: 12px;
+
+  background: white;
+
+  border-radius: 8px;
+}
+
+.recording-type p {
+  margin-top: 0;
+  margin-bottom: 10px;
+
+  font-size: 13px;
+}
+
+.recording-type label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  font-size: 13px;
+
+  cursor: pointer;
+}
+
+.recording-type input {
+  margin-right: 6px;
 }
