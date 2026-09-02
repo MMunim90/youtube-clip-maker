@@ -112,3 +112,104 @@ function formatTime(seconds) {
   return `${String(minutes).padStart(2, "0")}:` +
          `${String(secs).padStart(2, "0")}`;
 }
+
+
+const startRecordingButton =
+  document.getElementById("startRecording");
+
+const stopRecordingButton =
+  document.getElementById("stopRecording");
+
+
+startRecordingButton.addEventListener(
+  "click",
+  async () => {
+
+    try {
+
+      const stream =
+        await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: true
+        });
+
+      const recordedChunks = [];
+
+      const mediaRecorder =
+        new MediaRecorder(stream, {
+          mimeType: "video/webm"
+        });
+
+      mediaRecorder.ondataavailable =
+        (event) => {
+
+          if (event.data.size > 0) {
+            recordedChunks.push(event.data);
+          }
+
+        };
+
+
+      mediaRecorder.onstop = () => {
+
+        const blob = new Blob(
+          recordedChunks,
+          {
+            type: "video/webm"
+          }
+        );
+
+        const url =
+          URL.createObjectURL(blob);
+
+        const a =
+          document.createElement("a");
+
+        a.href = url;
+
+        a.download =
+          "youtube-clip.webm";
+
+        a.click();
+
+        URL.revokeObjectURL(url);
+
+        stream.getTracks().forEach(
+          track => track.stop()
+        );
+
+        statusElement.textContent =
+          "Recording downloaded";
+
+      };
+
+
+      mediaRecorder.start();
+
+      statusElement.textContent =
+        "Recording...";
+
+
+      stopRecordingButton.onclick = () => {
+
+        if (
+          mediaRecorder.state !== "inactive"
+        ) {
+
+          mediaRecorder.stop();
+
+        }
+
+      };
+
+    } catch (error) {
+
+      console.error(error);
+
+      statusElement.textContent =
+        "Recording cancelled";
+
+    }
+
+  }
+);

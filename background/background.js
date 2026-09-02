@@ -1,0 +1,1 @@
+console.log("YouTube Clip Maker background service worker started.");
