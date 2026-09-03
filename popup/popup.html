@@ -19,6 +19,11 @@
         <span id="status">Ready</span>
       </div>
 
+      <div class="recording-time">
+        <span>Recording Time:</span>
+        <span id="recordingTime">00:00</span>
+      </div>
+
       <button id="detectVideo">Detect YouTube Video</button>
 
       <div class="video-info">
@@ -59,12 +64,32 @@
         </label>
       </div>
 
+      <div class="download-type">
+        <p>Download Type</p>
+
+        <label>
+          <input type="radio" name="downloadType" value="mp4" checked />
+
+          Video (MP4)
+        </label>
+
+        <label>
+          <input type="radio" name="downloadType" value="mp3" />
+
+          Audio (MP3)
+        </label>
+
+        <label>
+          <input type="radio" name="downloadType" value="webm" />
+
+          WebM
+        </label>
+      </div>
+
       <button id="startRecording">Start Recording</button>
 
       <button id="stopRecording">Stop Recording</button>
     </div>
-
-    <button id="testFFmpeg">Test FFmpeg</button>
 
     <script type="module" src="popup.js"></script>
     <!-- <script type="module" src="../recorder/recorder.js"></script> -->

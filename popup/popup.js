@@ -1,25 +1,8 @@
-import { loadFFmpeg } from "../dist/ffmpeg.js";
+// import { loadFFmpeg } from "../dist/ffmpeg.js";
 import { startRecorder, stopRecording } from "../recorder/recorder.js";
 
-const testFFmpegButton = document.getElementById("testFFmpeg");
-
-testFFmpegButton.addEventListener("click", async () => {
-  try {
-    console.log("Starting FFmpeg test...");
-
-    statusElement.textContent = "Loading FFmpeg...";
-
-    await loadFFmpeg();
-
-    statusElement.textContent = "FFmpeg Ready";
-
-    console.log("FFmpeg test successful.");
-  } catch (error) {
-    console.error("FFmpeg test failed:", error);
-
-    statusElement.textContent = "FFmpeg Error";
-  }
-});
+let recordingStartTime = null;
+let recordingTimer = null;
 
 function timeToSeconds(timeString) {
   const parts = timeString.trim().split(":").map(Number);
@@ -136,6 +119,7 @@ async function playVideo() {
 // DOM Elements
 const detectVideoButton = document.getElementById("detectVideo");
 const statusElement = document.getElementById("status");
+const recordingTimeElement = document.getElementById("recordingTime");
 const durationElement = document.getElementById("duration");
 const currentTimeElement = document.getElementById("currentTime");
 
@@ -252,21 +236,29 @@ startRecordingButton.addEventListener("click", async () => {
         if (state === "recording") {
           startRecordingButton.disabled = true;
           stopRecordingButton.disabled = false;
+
+          startRecordingTimer();
         }
 
         if (state === "processing") {
           startRecordingButton.disabled = true;
           stopRecordingButton.disabled = true;
+
+          stopRecordingTimer();
         }
 
         if (state === "finished") {
           startRecordingButton.disabled = false;
           stopRecordingButton.disabled = true;
+
+          stopRecordingTimer();
         }
 
         if (state === "cancelled" || state === "error") {
           startRecordingButton.disabled = false;
           stopRecordingButton.disabled = true;
+
+          stopRecordingTimer();
         }
       },
     });
@@ -289,4 +281,23 @@ function getRecordingType() {
   );
 
   return selected ? selected.value : "video";
+}
+
+function startRecordingTimer() {
+  recordingStartTime = Date.now();
+
+  recordingTimeElement.textContent = "00:00";
+
+  recordingTimer = setInterval(() => {
+    const elapsedSeconds = Math.floor((Date.now() - recordingStartTime) / 1000);
+
+    recordingTimeElement.textContent = formatTime(elapsedSeconds);
+  }, 1000);
+}
+
+function stopRecordingTimer() {
+  if (recordingTimer) {
+    clearInterval(recordingTimer);
+    recordingTimer = null;
+  }
 }
