@@ -24,9 +24,23 @@
         <span id="recordingTime">00:00</span>
       </div>
 
+      <div id="conversionProgress" class="conversion-progress">
+        <p id="conversionStatus">Converting...</p>
+
+        <p>
+          <span id="progressBlocks">░░░░░░░░░░░░░░░░░░░░</span>
+          <span id="progressPercentage">0%</span>
+        </p>
+      </div>
+
       <button id="detectVideo">Detect YouTube Video</button>
 
       <div class="video-info">
+        <p>
+          Video:
+          <span id="videoTitle">--</span>
+        </p>
+
         <p>
           Duration:
           <span id="duration">--</span>

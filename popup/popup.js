@@ -138,6 +138,14 @@ const pauseRecordingButton = document.getElementById("pauseRecording");
 
 const cancelRecordingButton = document.getElementById("cancelRecording");
 
+const conversionProgress = document.getElementById("conversionProgress");
+
+const conversionStatus = document.getElementById("conversionStatus");
+
+const progressBlocks = document.getElementById("progressBlocks");
+
+const progressPercentage = document.getElementById("progressPercentage");
+
 // Initial button state
 startRecordingButton.disabled = false;
 stopRecordingButton.disabled = true;
@@ -246,6 +254,10 @@ startRecordingButton.addEventListener("click", async () => {
       startTime,
       endTime,
       playVideo,
+
+      onProgress: (percentage, message) => {
+        updateConversionProgress(percentage, message);
+      },
 
       onStateChange: (state) => {
         if (state === "recording") {
@@ -456,4 +468,21 @@ function stopRecordingTimer() {
 
   recordingStartTime = null;
   pausedRecordingTime = 0;
+}
+
+function updateConversionProgress(percentage, message) {
+  conversionProgress.style.display = "block";
+
+  conversionStatus.textContent = message;
+
+  const totalBlocks = 20;
+
+  const filledBlocks = Math.round((percentage / 100) * totalBlocks);
+
+  const emptyBlocks = totalBlocks - filledBlocks;
+
+  progressBlocks.textContent =
+    "█".repeat(filledBlocks) + "░".repeat(emptyBlocks);
+
+  progressPercentage.textContent = `${percentage}%`;
 }

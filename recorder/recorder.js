@@ -8,6 +8,7 @@ let recordingTimer = null;
 let stateChangeCallback = null;
 let recordingEndTime = null;
 let recordingEndTimestamp = null;
+let ffmpegProgressListener = null;
 
 let isCancelled = false;
 let isPaused = false;
@@ -19,6 +20,7 @@ export async function startRecorder({
   startTime,
   endTime,
   playVideo,
+  onProgress,
   onStateChange,
 }) {
   stateChangeCallback = onStateChange;
@@ -107,7 +109,7 @@ export async function startRecorder({
           stateChangeCallback("processing");
         }
 
-        await createDownload(recordingType, downloadType);
+        await createDownload(recordingType, downloadType, onProgress);
 
         if (stateChangeCallback) {
           stateChangeCallback("finished");
@@ -201,10 +203,7 @@ export function pauseRecording() {
 }
 
 export function resumeRecording() {
-  if (
-    mediaRecorder &&
-    mediaRecorder.state === "paused"
-  ) {
+  if (mediaRecorder && mediaRecorder.state === "paused") {
     mediaRecorder.resume();
 
     isPaused = false;
@@ -212,9 +211,7 @@ export function resumeRecording() {
     console.log("Recording resumed.");
 
     const recordingType =
-      mediaRecorder.stream.getVideoTracks().length > 0
-        ? "video"
-        : "audio";
+      mediaRecorder.stream.getVideoTracks().length > 0 ? "video" : "audio";
 
     updateRecordingStatus(recordingType);
 
@@ -269,7 +266,7 @@ export function stopRecording() {
   }
 }
 
-async function createDownload(recordingType, downloadType) {
+async function createDownload(recordingType, downloadType, onProgress) {
   const blob = new Blob(recordedChunks, {
     type: recordingType === "audio" ? "audio/webm" : "video/webm",
   });
@@ -288,7 +285,11 @@ async function createDownload(recordingType, downloadType) {
 
       console.log("Starting WebM → MP3 conversion...");
 
-      await convertAudioToMP3(blob);
+      await convertAudioToMP3(blob, (percentage) => {
+        if (onProgress) {
+          onProgress(percentage, "Converting audio to MP3...");
+        }
+      });
 
       return;
     }
@@ -314,7 +315,11 @@ async function createDownload(recordingType, downloadType) {
 
       console.log("Starting WebM → MP4 conversion...");
 
-      await convertVideoToMP4(blob);
+      await convertVideoToMP4(blob, (percentage) => {
+        if (onProgress) {
+          onProgress(percentage, "Converting video to MP4...");
+        }
+      });
 
       return;
     }
@@ -324,7 +329,11 @@ async function createDownload(recordingType, downloadType) {
 
       console.log("Starting WebM → MP3 conversion...");
 
-      await convertAudioToMP3(blob);
+      await convertAudioToMP3(blob, (percentage) => {
+        if (onProgress) {
+          onProgress(percentage, "Converting audio to MP3...");
+        }
+      });
 
       return;
     }
@@ -343,121 +352,84 @@ async function createDownload(recordingType, downloadType) {
   throw new Error("Unsupported recording/download type combination");
 }
 
-async function convertVideoToMP4(blob) {
-  console.log("Loading FFmpeg...");
-
+async function convertVideoToMP4(blob, onProgress) {
   await loadFFmpeg();
 
-  console.log("FFmpeg ready.");
-
-  const inputData = new Uint8Array(await blob.arrayBuffer());
-
-  console.log("Writing input.webm to FFmpeg...");
-
-  await ffmpeg.writeFile("input.webm", inputData);
-
-  console.log("Running FFmpeg conversion...");
-
-  await ffmpeg.exec([
-    "-i",
+  await ffmpeg.writeFile(
     "input.webm",
+    new Uint8Array(await blob.arrayBuffer()),
+  );
 
-    "-vf",
-    "scale=720:-2,fps=30",
+  startFFmpegProgress(onProgress);
 
-    "-c:v",
-    "libx264",
-    "-preset",
-    "ultrafast",
-    "-crf",
-    "28",
+  try {
+    await ffmpeg.exec([
+      "-i",
+      "input.webm",
+      "-vf",
+      "scale=720:-2,fps=30",
+      "-c:v",
+      "libx264",
+      "-preset",
+      "ultrafast",
+      "-crf",
+      "28",
+      "-c:a",
+      "aac",
+      "output.mp4",
+    ]);
 
-    "-c:a",
-    "aac",
+    if (onProgress) {
+      onProgress(100);
+    }
+  } finally {
+    stopFFmpegProgress();
+  }
 
-    "output.mp4",
-  ]);
+  const data = await ffmpeg.readFile("output.mp4");
 
-  console.log("FFmpeg conversion completed.");
-
-  console.log("Checking output.mp4...");
-
-  const files = await ffmpeg.listDir("/");
-
-  console.log("FFmpeg files:", files);
-
-  const outputData = await ffmpeg.readFile("output.mp4");
-
-  console.log("output.mp4 read successfully.");
-
-  const outputBlob = new Blob([outputData.buffer], {
+  const mp4Blob = new Blob([data.buffer], {
     type: "video/mp4",
   });
 
-  console.log("MP4 Blob created.");
-
-  downloadBlob(outputBlob, "mp4", "youtube-clip");
-
-  // Clean FFmpeg virtual filesystem
-  await ffmpeg.deleteFile("input.webm");
-  await ffmpeg.deleteFile("output.mp4");
-
-  statusElement.textContent = "Video downloaded as MP4";
-
-  console.log("Video MP4 downloaded successfully.");
+  downloadBlob(mp4Blob, "mp4", "youtube-clip");
 }
 
-async function convertAudioToMP3(blob) {
-  console.log("Loading FFmpeg...");
-
+async function convertAudioToMP3(blob, onProgress) {
   await loadFFmpeg();
 
-  console.log("FFmpeg ready.");
-
-  const inputData = new Uint8Array(await blob.arrayBuffer());
-
-  console.log("Writing input.webm to FFmpeg...");
-
-  await ffmpeg.writeFile("input.webm", inputData);
-
-  console.log("Running WebM → MP3 conversion...");
-
-  await ffmpeg.exec([
-    "-i",
+  await ffmpeg.writeFile(
     "input.webm",
+    new Uint8Array(await blob.arrayBuffer()),
+  );
 
-    "-vn",
+  startFFmpegProgress(onProgress);
 
-    "-c:a",
-    "libmp3lame",
+  try {
+    await ffmpeg.exec([
+      "-i",
+      "input.webm",
+      "-c:a",
+      "libmp3lame",
+      "-b:a",
+      "192k",
+      "output.mp3",
+    ]);
 
-    "-b:a",
-    "192k",
+    if (onProgress) {
+      onProgress(100);
+    }
+  } finally {
+    stopFFmpegProgress();
+  }
 
-    "output.mp3",
-  ]);
+  const data = await ffmpeg.readFile("output.mp3");
 
-  console.log("MP3 conversion completed.");
-
-  const outputData = await ffmpeg.readFile("output.mp3");
-
-  console.log("output.mp3 read successfully.");
-
-  const outputBlob = new Blob([outputData.buffer], {
+  const mp3Blob = new Blob([data.buffer], {
     type: "audio/mpeg",
   });
 
-  console.log("MP3 Blob created.");
-
-  downloadBlob(outputBlob, "mp3", "youtube-audio");
-
-  // Clean FFmpeg virtual filesystem
-  await ffmpeg.deleteFile("input.webm");
-  await ffmpeg.deleteFile("output.mp3");
-
-  statusElement.textContent = "Audio downloaded as MP3";
-
-  console.log("MP3 downloaded successfully.");
+  downloadBlob(mp3Blob, "mp3", "youtube-audio");
 }
 
 function downloadBlob(blob, extension, prefix) {
@@ -480,4 +452,25 @@ function downloadBlob(blob, extension, prefix) {
   a.click();
 
   URL.revokeObjectURL(url);
+}
+
+function startFFmpegProgress(onProgress) {
+  ffmpegProgressListener = ({ progress }) => {
+    const percentage = Math.round(progress * 100);
+
+    console.log(`FFmpeg Progress: ${percentage}%`);
+
+    if (onProgress) {
+      onProgress(percentage);
+    }
+  };
+
+  ffmpeg.on("progress", ffmpegProgressListener);
+}
+
+function stopFFmpegProgress() {
+  if (ffmpegProgressListener) {
+    ffmpeg.off("progress", ffmpegProgressListener);
+    ffmpegProgressListener = null;
+  }
 }
