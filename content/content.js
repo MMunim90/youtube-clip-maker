@@ -36,6 +36,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       title: title,
       duration: video.duration,
       currentTime: video.currentTime,
+      paused: video.paused,
     });
 
     return true;
@@ -84,3 +85,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 });
+
+function getVideoElement() {
+  return document.querySelector("video");
+}
+
+function setupVideoListeners() {
+  const video = getVideoElement();
+
+  if (!video) {
+    return;
+  }
+
+  video.addEventListener("play", () => {
+    console.log("YouTube video playing");
+  });
+
+  video.addEventListener("pause", () => {
+    console.log("YouTube video paused");
+  });
+}

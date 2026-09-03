@@ -36,6 +36,27 @@ export async function startRecorder({
       audio: true,
     });
 
+    // Select tracks according to recording type
+    if (recordingType === "audio") {
+      // Audio Only
+      const audioTracks = recordingStream.getAudioTracks();
+
+      if (audioTracks.length === 0) {
+        throw new Error("No audio track available");
+      }
+
+      recordingStream = new MediaStream(audioTracks);
+    } else if (recordingType === "video-only") {
+      // Video Only
+      const videoTracks = recordingStream.getVideoTracks();
+
+      if (videoTracks.length === 0) {
+        throw new Error("No video track available");
+      }
+
+      recordingStream = new MediaStream(videoTracks);
+    }
+
     const recordingDuration = (endTime - startTime) * 1000;
 
     recordingEndTimestamp = Date.now() + recordingDuration;
@@ -43,28 +64,17 @@ export async function startRecorder({
     // Check actual video track settings
     const videoTrack = recordingStream.getVideoTracks()[0];
 
-    console.log("Video track settings:", videoTrack.getSettings());
+    if (videoTrack) {
+      console.log("Video track settings:", videoTrack.getSettings());
 
-    // Detect when user stops screen sharing
-    videoTrack.addEventListener("ended", () => {
-      console.log("Screen sharing stopped by user.");
+      // Detect when user stops screen sharing
+      videoTrack.addEventListener("ended", () => {
+        console.log("Screen sharing stopped by user.");
 
-      if (mediaRecorder && mediaRecorder.state !== "inactive") {
-        stopRecording();
-      }
-    });
-
-    let recorderStream = recordingStream;
-
-    // Audio only
-    if (recordingType === "audio") {
-      const audioTracks = recordingStream.getAudioTracks();
-
-      if (audioTracks.length === 0) {
-        throw new Error("No audio track available");
-      }
-
-      recorderStream = new MediaStream(audioTracks);
+        if (mediaRecorder && mediaRecorder.state !== "inactive") {
+          stopRecording();
+        }
+      });
     }
 
     let mimeType;
@@ -72,12 +82,13 @@ export async function startRecorder({
     if (recordingType === "audio") {
       mimeType = "audio/webm";
     } else {
+      // Video + Audio OR Video Only
       mimeType = "video/webm";
     }
 
     recordedChunks = [];
 
-    mediaRecorder = new MediaRecorder(recorderStream, {
+    mediaRecorder = new MediaRecorder(recordingStream, {
       mimeType: mimeType,
     });
 
@@ -272,6 +283,14 @@ async function createDownload(recordingType, downloadType, onProgress) {
   });
 
   // =========================
+  // Video Only → MP3 Protection
+  // =========================
+
+  if (recordingType === "video-only" && downloadType === "mp3") {
+    throw new Error("MP3 is not supported for Video Only recording");
+  }
+
+  // =========================
   // Audio Only Recording
   // =========================
 
@@ -306,10 +325,12 @@ async function createDownload(recordingType, downloadType, onProgress) {
   }
 
   // =========================
-  // Video + Audio Recording
+  // Video + Audio
+  // OR
+  // Video Only
   // =========================
 
-  if (recordingType === "video") {
+  if (recordingType === "video" || recordingType === "video-only") {
     if (downloadType === "mp4") {
       statusElement.textContent = "Converting video to MP4...";
 
@@ -331,7 +352,7 @@ async function createDownload(recordingType, downloadType, onProgress) {
 
       await convertAudioToMP3(blob, (percentage) => {
         if (onProgress) {
-          onProgress(percentage, "Converting audio to MP3...");
+          onProgress(percentage, "Converting video to MP3...");
         }
       });
 
@@ -341,7 +362,11 @@ async function createDownload(recordingType, downloadType, onProgress) {
     if (downloadType === "webm") {
       statusElement.textContent = "Downloading WebM...";
 
-      downloadBlob(blob, "webm", "youtube-clip");
+      downloadBlob(
+        blob,
+        "webm",
+        recordingType === "video-only" ? "youtube-video-only" : "youtube-clip",
+      );
 
       statusElement.textContent = "Video downloaded as WebM";
 
@@ -456,7 +481,9 @@ function downloadBlob(blob, extension, prefix) {
 
 function startFFmpegProgress(onProgress) {
   ffmpegProgressListener = ({ progress }) => {
-    const percentage = Math.round(progress * 100);
+    const safeProgress = Math.max(0, Math.min(1, Number(progress) || 0));
+
+    const percentage = Math.round(safeProgress * 100);
 
     console.log(`FFmpeg Progress: ${percentage}%`);
 

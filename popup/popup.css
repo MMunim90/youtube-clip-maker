@@ -156,11 +156,23 @@ button {
   font-weight: bold;
 }
 
-.video-title-container {
-  display: inline-block;
-  width: 220px;
+.video-title-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  margin: 8px 0;
   overflow: hidden;
-  vertical-align: bottom;
+}
+
+.video-label {
+  flex-shrink: 0;
+  margin-right: 5px;
+}
+
+.video-title-container {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
   white-space: nowrap;
 }
 

@@ -10,6 +10,57 @@ import {
 let recordingStartTime = null;
 let recordingTimer = null;
 let pausedRecordingTime = 0;
+let currentTimeInterval = null;
+
+function startCurrentTimeTracking() {
+  if (currentTimeInterval) {
+    clearInterval(currentTimeInterval);
+  }
+
+  currentTimeInterval = setInterval(async () => {
+    try {
+      const tabs = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+
+      if (!tabs[0]?.id) {
+        return;
+      }
+
+      chrome.tabs.sendMessage(
+        tabs[0].id,
+        {
+          action: "GET_VIDEO_INFO",
+        },
+        (response) => {
+          if (chrome.runtime.lastError) {
+            return;
+          }
+
+          if (!response || !response.success) {
+            return;
+          }
+
+          if (response.paused) {
+            return;
+          }
+
+          currentTimeElement.textContent = formatTime(response.currentTime);
+        },
+      );
+    } catch (error) {
+      console.error("Current time tracking error:", error);
+    }
+  }, 500);
+}
+
+function stopCurrentTimeTracking() {
+  if (currentTimeInterval) {
+    clearInterval(currentTimeInterval);
+    currentTimeInterval = null;
+  }
+}
 
 function timeToSeconds(timeString) {
   const parts = timeString.trim().split(":").map(Number);
@@ -148,6 +199,28 @@ const progressPercentage = document.getElementById("progressPercentage");
 
 const videoTitleElement = document.getElementById("videoTitle");
 
+const startTimeInput = document.getElementById("startTime");
+
+const endTimeInput = document.getElementById("endTime");
+
+startTimeInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+
+    endTimeInput.focus();
+  }
+});
+
+function resetConversionProgress() {
+  conversionProgress.style.display = "none";
+
+  conversionStatus.textContent = "Converting...";
+
+  progressBlocks.textContent = "░░░░░░░░░░░░░░░░░░░░";
+
+  progressPercentage.textContent = "0%";
+}
+
 // Initial button state
 startRecordingButton.disabled = false;
 stopRecordingButton.disabled = true;
@@ -202,6 +275,8 @@ detectVideoButton.addEventListener("click", async () => {
         durationElement.textContent = formatTime(response.duration);
 
         currentTimeElement.textContent = formatTime(response.currentTime);
+
+        startCurrentTimeTracking();
       },
     );
   } catch (error) {
@@ -213,6 +288,7 @@ detectVideoButton.addEventListener("click", async () => {
 
 // Start Recording
 startRecordingButton.addEventListener("click", async () => {
+  resetConversionProgress();
   try {
     const startInput = document.getElementById("startTime");
     const endInput = document.getElementById("endTime");
@@ -399,21 +475,43 @@ const mp3DownloadInput = document.querySelector(
   'input[name="downloadType"][value="mp3"]',
 );
 
+const webmDownloadInput = document.querySelector(
+  'input[name="downloadType"][value="webm"]',
+);
+
 recordingTypeInputs.forEach((input) => {
   input.addEventListener("change", () => {
-    if (input.value === "audio" && input.checked) {
-      // Disable MP4 for Audio Only
-      mp4DownloadInput.disabled = true;
+    if (!input.checked) {
+      return;
+    }
 
-      // If MP4 was selected, automatically select MP3
+    // Audio Only
+    if (input.value === "audio") {
+      mp4DownloadInput.disabled = true;
+      mp3DownloadInput.disabled = false;
+      webmDownloadInput.disabled = false;
+
       if (mp4DownloadInput.checked) {
         mp3DownloadInput.checked = true;
       }
     }
 
-    if (input.value === "video" && input.checked) {
-      // Enable MP4 again
+    // Video + Audio
+    if (input.value === "video") {
       mp4DownloadInput.disabled = false;
+      mp3DownloadInput.disabled = false;
+      webmDownloadInput.disabled = false;
+    }
+
+    // Video Only
+    if (input.value === "video-only") {
+      mp4DownloadInput.disabled = false;
+      mp3DownloadInput.disabled = true;
+      webmDownloadInput.disabled = false;
+
+      if (mp3DownloadInput.checked) {
+        mp4DownloadInput.checked = true;
+      }
     }
   });
 });
@@ -481,37 +579,109 @@ function updateConversionProgress(percentage, message) {
 
   const totalBlocks = 20;
 
-  const filledBlocks = Math.round((percentage / 100) * totalBlocks);
+  // Keep percentage safely between 0 and 100
+  const safePercentage = Math.max(0, Math.min(100, Number(percentage) || 0));
+
+  const filledBlocks = Math.round((safePercentage / 100) * totalBlocks);
 
   const emptyBlocks = totalBlocks - filledBlocks;
 
   progressBlocks.textContent =
     "█".repeat(filledBlocks) + "░".repeat(emptyBlocks);
 
-  progressPercentage.textContent = `${percentage}%`;
+  progressPercentage.textContent = `${Math.round(safePercentage)}%`;
 }
 
+let titleAnimationFrame = null;
+let titleAnimationTimeout = null;
+
 function updateVideoTitle(title) {
-  videoTitleElement.textContent = title;
-
-  // Reset previous animation
-  videoTitleElement.style.animation = "none";
-
-  // Force browser to recalculate
-  void videoTitleElement.offsetWidth;
-
   const container = videoTitleElement.parentElement;
 
-  // Check if title is longer than container
-  if (videoTitleElement.scrollWidth > container.clientWidth) {
-    const distance = videoTitleElement.scrollWidth - container.clientWidth;
-
-    const duration = Math.max(5, distance / 30);
-
-    videoTitleElement.style.setProperty("--scroll-distance", `${distance}px`);
-
-    videoTitleElement.style.setProperty("--scroll-duration", `${duration}s`);
-
-    videoTitleElement.style.animation = `titleMarquee var(--scroll-duration) linear infinite`;
+  // Stop previous animation
+  if (titleAnimationFrame) {
+    cancelAnimationFrame(titleAnimationFrame);
+    titleAnimationFrame = null;
   }
+
+  if (titleAnimationTimeout) {
+    clearTimeout(titleAnimationTimeout);
+    titleAnimationTimeout = null;
+  }
+
+  // Reset position
+  videoTitleElement.style.transform = "translateX(0)";
+
+  // Set title
+  videoTitleElement.textContent = title;
+
+  // Check title width after rendering
+  requestAnimationFrame(() => {
+    const titleWidth = videoTitleElement.scrollWidth;
+
+    const containerWidth = container.clientWidth;
+
+    // If title fits, don't animate
+    if (titleWidth <= containerWidth) {
+      return;
+    }
+
+    const distance = titleWidth - containerWidth;
+
+    // Lower value = slower
+    const speed = 30; // pixels per second
+
+    startTitleAnimation(distance, speed);
+  });
+}
+
+function startTitleAnimation(distance, speed) {
+  const pauseDuration = 2500; // 2 seconds
+
+  let startTime = null;
+
+  function pauseAtStart() {
+    titleAnimationTimeout = setTimeout(() => {
+      startMoving();
+    }, pauseDuration);
+  }
+
+  function startMoving() {
+    startTime = null;
+
+    function move(timestamp) {
+      if (!startTime) {
+        startTime = timestamp;
+      }
+
+      const elapsed = (timestamp - startTime) / 1000;
+
+      const movedDistance = elapsed * speed;
+
+      if (movedDistance >= distance) {
+        // Reached the end
+        videoTitleElement.style.transform = `translateX(-${distance}px)`;
+
+        // Pause 2 seconds at the end
+        titleAnimationTimeout = setTimeout(() => {
+          // Instantly return to beginning
+          videoTitleElement.style.transform = "translateX(0)";
+
+          // Pause 2 seconds at beginning
+          pauseAtStart();
+        }, pauseDuration);
+
+        return;
+      }
+
+      videoTitleElement.style.transform = `translateX(-${movedDistance}px)`;
+
+      titleAnimationFrame = requestAnimationFrame(move);
+    }
+
+    titleAnimationFrame = requestAnimationFrame(move);
+  }
+
+  // First 2-second pause
+  pauseAtStart();
 }

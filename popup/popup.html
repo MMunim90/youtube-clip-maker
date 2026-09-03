@@ -36,8 +36,9 @@
       <button id="detectVideo">Detect YouTube Video</button>
 
       <div class="video-info">
-        <p>
-          Video:
+        <p class="video-title-row">
+          <span class="video-label">Video:</span>
+
           <span class="video-title-container">
             <span id="videoTitle">--</span>
           </span>
@@ -69,14 +70,17 @@
 
         <label>
           <input type="radio" name="recordingType" value="video" checked />
-
           Video + Audio
         </label>
 
         <label>
           <input type="radio" name="recordingType" value="audio" />
-
           Audio Only
+        </label>
+
+        <label>
+          <input type="radio" name="recordingType" value="video-only" />
+          Video Only
         </label>
       </div>
 
