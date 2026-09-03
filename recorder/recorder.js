@@ -8,6 +8,7 @@ let recordingTimer = null;
 
 export async function startRecorder({
   recordingType,
+  downloadType,
   startTime,
   endTime,
   playVideo,
@@ -72,7 +73,7 @@ export async function startRecorder({
           onStateChange("processing");
         }
 
-        await createDownload(recordingType);
+        await createDownload(recordingType, downloadType);
 
         if (onStateChange) {
           onStateChange("finished");
@@ -145,28 +146,78 @@ export function stopRecording() {
   }
 }
 
-async function createDownload(recordingType) {
+async function createDownload(recordingType, downloadType) {
   const blob = new Blob(recordedChunks, {
     type: recordingType === "audio" ? "audio/webm" : "video/webm",
   });
 
-  // AUDIO
+  // =========================
+  // Audio Only Recording
+  // =========================
+
   if (recordingType === "audio") {
-    statusElement.textContent = "Converting audio to MP3...";
+    if (downloadType === "mp4") {
+      throw new Error("MP4 is not supported for Audio Only recording");
+    }
 
-    console.log("Starting WebM → MP3 conversion...");
+    if (downloadType === "mp3") {
+      statusElement.textContent = "Converting audio to MP3...";
 
-    await convertAudioToMP3(blob);
+      console.log("Starting WebM → MP3 conversion...");
 
-    return;
+      await convertAudioToMP3(blob);
+
+      return;
+    }
+
+    if (downloadType === "webm") {
+      statusElement.textContent = "Downloading WebM...";
+
+      downloadBlob(blob, "webm", "youtube-audio");
+
+      statusElement.textContent = "Audio downloaded as WebM";
+
+      return;
+    }
   }
 
-  // VIDEO
-  statusElement.textContent = "Converting video to MP4...";
+  // =========================
+  // Video + Audio Recording
+  // =========================
 
-  console.log("Starting WebM → MP4 conversion...");
+  if (recordingType === "video") {
+    if (downloadType === "mp4") {
+      statusElement.textContent = "Converting video to MP4...";
 
-  await convertVideoToMP4(blob);
+      console.log("Starting WebM → MP4 conversion...");
+
+      await convertVideoToMP4(blob);
+
+      return;
+    }
+
+    if (downloadType === "mp3") {
+      statusElement.textContent = "Converting audio to MP3...";
+
+      console.log("Starting WebM → MP3 conversion...");
+
+      await convertAudioToMP3(blob);
+
+      return;
+    }
+
+    if (downloadType === "webm") {
+      statusElement.textContent = "Downloading WebM...";
+
+      downloadBlob(blob, "webm", "youtube-clip");
+
+      statusElement.textContent = "Video downloaded as WebM";
+
+      return;
+    }
+  }
+
+  throw new Error("Unsupported recording/download type combination");
 }
 
 async function convertVideoToMP4(blob) {

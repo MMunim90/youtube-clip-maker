@@ -225,9 +225,11 @@ startRecordingButton.addEventListener("click", async () => {
     statusElement.textContent = "Select YouTube tab";
 
     const recordingType = getRecordingType();
+    const downloadType = getDownloadType();
 
     await startRecorder({
       recordingType,
+      downloadType,
       startTime,
       endTime,
       playVideo,
@@ -282,6 +284,44 @@ function getRecordingType() {
 
   return selected ? selected.value : "video";
 }
+
+// Download Type
+function getDownloadType() {
+  const selected = document.querySelector('input[name="downloadType"]:checked');
+
+  return selected ? selected.value : "mp4";
+}
+
+const recordingTypeInputs = document.querySelectorAll(
+  'input[name="recordingType"]',
+);
+
+const mp4DownloadInput = document.querySelector(
+  'input[name="downloadType"][value="mp4"]',
+);
+
+const mp3DownloadInput = document.querySelector(
+  'input[name="downloadType"][value="mp3"]',
+);
+
+recordingTypeInputs.forEach((input) => {
+  input.addEventListener("change", () => {
+    if (input.value === "audio" && input.checked) {
+      // Disable MP4 for Audio Only
+      mp4DownloadInput.disabled = true;
+
+      // If MP4 was selected, automatically select MP3
+      if (mp4DownloadInput.checked) {
+        mp3DownloadInput.checked = true;
+      }
+    }
+
+    if (input.value === "video" && input.checked) {
+      // Enable MP4 again
+      mp4DownloadInput.disabled = false;
+    }
+  });
+});
 
 function startRecordingTimer() {
   recordingStartTime = Date.now();
