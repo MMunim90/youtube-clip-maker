@@ -1,8 +1,15 @@
 // import { loadFFmpeg } from "../dist/ffmpeg.js";
-import { startRecorder, stopRecording } from "../recorder/recorder.js";
+import {
+  startRecorder,
+  stopRecording,
+  pauseRecording,
+  resumeRecording,
+  cancelRecording,
+} from "../recorder/recorder.js";
 
 let recordingStartTime = null;
 let recordingTimer = null;
+let pausedRecordingTime = 0;
 
 function timeToSeconds(timeString) {
   const parts = timeString.trim().split(":").map(Number);
@@ -127,9 +134,15 @@ const startRecordingButton = document.getElementById("startRecording");
 
 const stopRecordingButton = document.getElementById("stopRecording");
 
+const pauseRecordingButton = document.getElementById("pauseRecording");
+
+const cancelRecordingButton = document.getElementById("cancelRecording");
+
 // Initial button state
 startRecordingButton.disabled = false;
 stopRecordingButton.disabled = true;
+pauseRecordingButton.disabled = true;
+cancelRecordingButton.disabled = true;
 
 // Detect YouTube Video
 detectVideoButton.addEventListener("click", async () => {
@@ -238,13 +251,43 @@ startRecordingButton.addEventListener("click", async () => {
         if (state === "recording") {
           startRecordingButton.disabled = true;
           stopRecordingButton.disabled = false;
+          pauseRecordingButton.disabled = false;
+          cancelRecordingButton.disabled = false;
 
-          startRecordingTimer();
+          pauseRecordingButton.textContent = "Pause";
+
+          const currentRecordingType = getRecordingType();
+
+          statusElement.textContent =
+            currentRecordingType === "audio"
+              ? "Recording audio..."
+              : "Recording video...";
+
+          if (pausedRecordingTime === 0 && recordingStartTime === null) {
+            startRecordingTimer();
+          } else if (recordingStartTime === null) {
+            resumeRecordingTimer();
+          }
+        }
+
+        if (state === "paused") {
+          startRecordingButton.disabled = true;
+          stopRecordingButton.disabled = false;
+          pauseRecordingButton.disabled = false;
+          cancelRecordingButton.disabled = false;
+
+          pauseRecordingButton.textContent = "Resume";
+
+          statusElement.textContent = "Recording paused";
+
+          pauseRecordingTimer();
         }
 
         if (state === "processing") {
           startRecordingButton.disabled = true;
           stopRecordingButton.disabled = true;
+          pauseRecordingButton.disabled = true;
+          cancelRecordingButton.disabled = true;
 
           stopRecordingTimer();
         }
@@ -252,13 +295,35 @@ startRecordingButton.addEventListener("click", async () => {
         if (state === "finished") {
           startRecordingButton.disabled = false;
           stopRecordingButton.disabled = true;
+          pauseRecordingButton.disabled = true;
+          cancelRecordingButton.disabled = true;
+
+          pauseRecordingButton.textContent = "Pause";
 
           stopRecordingTimer();
         }
 
-        if (state === "cancelled" || state === "error") {
+        if (state === "cancelled") {
           startRecordingButton.disabled = false;
           stopRecordingButton.disabled = true;
+          pauseRecordingButton.disabled = true;
+          cancelRecordingButton.disabled = true;
+
+          pauseRecordingButton.textContent = "Pause";
+
+          statusElement.textContent = "Recording cancelled";
+
+          stopRecordingTimer();
+          recordingTimeElement.textContent = "00:00";
+        }
+
+        if (state === "error") {
+          startRecordingButton.disabled = false;
+          stopRecordingButton.disabled = true;
+          pauseRecordingButton.disabled = true;
+          cancelRecordingButton.disabled = true;
+
+          pauseRecordingButton.textContent = "Pause";
 
           stopRecordingTimer();
         }
@@ -271,9 +336,23 @@ startRecordingButton.addEventListener("click", async () => {
   }
 });
 
+// Cancel recording
+cancelRecordingButton.addEventListener("click", () => {
+  cancelRecording();
+});
+
 // Stop Recording
 stopRecordingButton.addEventListener("click", () => {
   stopRecording();
+});
+
+// Pause recording
+pauseRecordingButton.addEventListener("click", () => {
+  if (pauseRecordingButton.textContent === "Pause") {
+    pauseRecording();
+  } else {
+    resumeRecording();
+  }
 });
 
 // Recording Type
@@ -324,15 +403,49 @@ recordingTypeInputs.forEach((input) => {
 });
 
 function startRecordingTimer() {
+  pausedRecordingTime = 0;
   recordingStartTime = Date.now();
 
   recordingTimeElement.textContent = "00:00";
 
+  startTimerInterval();
+}
+
+function startTimerInterval() {
+  if (recordingTimer) {
+    clearInterval(recordingTimer);
+  }
+
   recordingTimer = setInterval(() => {
-    const elapsedSeconds = Math.floor((Date.now() - recordingStartTime) / 1000);
+    const elapsedSeconds =
+      pausedRecordingTime +
+      Math.floor((Date.now() - recordingStartTime) / 1000);
 
     recordingTimeElement.textContent = formatTime(elapsedSeconds);
   }, 1000);
+}
+
+function pauseRecordingTimer() {
+  if (!recordingStartTime) {
+    return;
+  }
+
+  pausedRecordingTime += Math.floor((Date.now() - recordingStartTime) / 1000);
+
+  recordingStartTime = null;
+
+  if (recordingTimer) {
+    clearInterval(recordingTimer);
+    recordingTimer = null;
+  }
+
+  recordingTimeElement.textContent = formatTime(pausedRecordingTime);
+}
+
+function resumeRecordingTimer() {
+  recordingStartTime = Date.now();
+
+  startTimerInterval();
 }
 
 function stopRecordingTimer() {
@@ -340,4 +453,7 @@ function stopRecordingTimer() {
     clearInterval(recordingTimer);
     recordingTimer = null;
   }
+
+  recordingStartTime = null;
+  pausedRecordingTime = 0;
 }

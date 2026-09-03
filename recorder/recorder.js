@@ -5,6 +5,13 @@ let mediaRecorder = null;
 let recordingStream = null;
 let recordedChunks = [];
 let recordingTimer = null;
+let stateChangeCallback = null;
+let recordingEndTime = null;
+let recordingEndTimestamp = null;
+
+let isCancelled = false;
+let isPaused = false;
+let endTime = null;
 
 export async function startRecorder({
   recordingType,
@@ -14,11 +21,22 @@ export async function startRecorder({
   playVideo,
   onStateChange,
 }) {
+  stateChangeCallback = onStateChange;
+
+  isCancelled = false;
+  isPaused = false;
+
+  recordingEndTime = endTime;
+
   try {
     recordingStream = await navigator.mediaDevices.getDisplayMedia({
       video: true,
       audio: true,
     });
+
+    const recordingDuration = (endTime - startTime) * 1000;
+
+    recordingEndTimestamp = Date.now() + recordingDuration;
 
     // Check actual video track settings
     const videoTrack = recordingStream.getVideoTracks()[0];
@@ -68,23 +86,39 @@ export async function startRecorder({
     };
 
     mediaRecorder.onstop = async () => {
+      if (isCancelled) {
+        console.log("Recording cancelled. Discarding recorded data.");
+
+        recordedChunks = [];
+
+        statusElement.textContent = "Recording cancelled";
+
+        if (stateChangeCallback) {
+          stateChangeCallback("cancelled");
+        }
+
+        return;
+      }
+
       try {
-        if (onStateChange) {
-          onStateChange("processing");
+        statusElement.textContent = "Processing...";
+
+        if (stateChangeCallback) {
+          stateChangeCallback("processing");
         }
 
         await createDownload(recordingType, downloadType);
 
-        if (onStateChange) {
-          onStateChange("finished");
+        if (stateChangeCallback) {
+          stateChangeCallback("finished");
         }
       } catch (error) {
         console.error("Processing failed:", error);
 
         statusElement.textContent = "Processing failed";
 
-        if (onStateChange) {
-          onStateChange("error");
+        if (stateChangeCallback) {
+          stateChangeCallback("error");
         }
       }
     };
@@ -93,18 +127,13 @@ export async function startRecorder({
 
     updateRecordingStatus(recordingType);
 
-    if (onStateChange) {
-      onStateChange("recording");
+    if (stateChangeCallback) {
+      stateChangeCallback("recording");
     }
 
-    // Play YouTube video
     await playVideo();
 
-    const duration = (endTime - startTime) * 1000;
-
-    recordingTimer = setTimeout(() => {
-      stopRecording();
-    }, duration);
+    scheduleEndTimeStop();
   } catch (error) {
     console.error(error);
 
@@ -114,8 +143,32 @@ export async function startRecorder({
       onStateChange("cancelled");
     }
 
+    //----
+
     stopRecording();
   }
+}
+
+function scheduleEndTimeStop() {
+  if (recordingTimer) {
+    clearTimeout(recordingTimer);
+    recordingTimer = null;
+  }
+
+  const remainingTime = recordingEndTimestamp - Date.now();
+
+  if (remainingTime <= 0) {
+    stopRecording();
+    return;
+  }
+
+  recordingTimer = setTimeout(() => {
+    console.log("End time reached.");
+
+    statusElement.textContent = "End time reached. Processing...";
+
+    stopRecording();
+  }, remainingTime);
 }
 
 function updateRecordingStatus(recordingType) {
@@ -126,19 +179,89 @@ function updateRecordingStatus(recordingType) {
   }
 }
 
-export function stopRecording() {
-  // Clear timer
+export function pauseRecording() {
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    if (recordingTimer) {
+      clearTimeout(recordingTimer);
+      recordingTimer = null;
+    }
+
+    mediaRecorder.pause();
+
+    isPaused = true;
+
+    console.log("Recording paused.");
+
+    statusElement.textContent = "Recording paused";
+
+    if (stateChangeCallback) {
+      stateChangeCallback("paused");
+    }
+  }
+}
+
+export function resumeRecording() {
+  if (
+    mediaRecorder &&
+    mediaRecorder.state === "paused"
+  ) {
+    mediaRecorder.resume();
+
+    isPaused = false;
+
+    console.log("Recording resumed.");
+
+    const recordingType =
+      mediaRecorder.stream.getVideoTracks().length > 0
+        ? "video"
+        : "audio";
+
+    updateRecordingStatus(recordingType);
+
+    if (stateChangeCallback) {
+      stateChangeCallback("recording");
+    }
+
+    scheduleEndTimeStop();
+  }
+}
+
+export function cancelRecording() {
+  console.log("Cancelling recording...");
+
+  isCancelled = true;
+  isPaused = false;
+
   if (recordingTimer) {
     clearTimeout(recordingTimer);
     recordingTimer = null;
   }
 
-  // Stop recorder
+  recordedChunks = [];
+
   if (mediaRecorder && mediaRecorder.state !== "inactive") {
     mediaRecorder.stop();
   }
 
-  // Stop stream
+  if (recordingStream) {
+    recordingStream.getTracks().forEach((track) => track.stop());
+
+    recordingStream = null;
+  }
+
+  statusElement.textContent = "Recording cancelled";
+}
+
+export function stopRecording() {
+  if (recordingTimer) {
+    clearTimeout(recordingTimer);
+    recordingTimer = null;
+  }
+
+  if (mediaRecorder && mediaRecorder.state !== "inactive") {
+    mediaRecorder.stop();
+  }
+
   if (recordingStream) {
     recordingStream.getTracks().forEach((track) => track.stop());
 
