@@ -1,4 +1,5 @@
 import { loadFFmpeg } from "../dist/ffmpeg.js";
+import { startRecorder, stopRecording } from "../recorder/recorder.js";
 
 const testFFmpegButton = document.getElementById("testFFmpeg");
 
@@ -142,6 +143,10 @@ const startRecordingButton = document.getElementById("startRecording");
 
 const stopRecordingButton = document.getElementById("stopRecording");
 
+// Initial button state
+startRecordingButton.disabled = false;
+stopRecordingButton.disabled = true;
+
 // Detect YouTube Video
 detectVideoButton.addEventListener("click", async () => {
   try {
@@ -241,6 +246,29 @@ startRecordingButton.addEventListener("click", async () => {
       recordingType,
       startTime,
       endTime,
+      playVideo,
+
+      onStateChange: (state) => {
+        if (state === "recording") {
+          startRecordingButton.disabled = true;
+          stopRecordingButton.disabled = false;
+        }
+
+        if (state === "processing") {
+          startRecordingButton.disabled = true;
+          stopRecordingButton.disabled = true;
+        }
+
+        if (state === "finished") {
+          startRecordingButton.disabled = false;
+          stopRecordingButton.disabled = true;
+        }
+
+        if (state === "cancelled" || state === "error") {
+          startRecordingButton.disabled = false;
+          stopRecordingButton.disabled = true;
+        }
+      },
     });
   } catch (error) {
     console.error(error);

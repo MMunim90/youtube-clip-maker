@@ -2,6 +2,10 @@ import { FFmpeg } from "@ffmpeg/ffmpeg";
 
 const ffmpeg = new FFmpeg();
 
+ffmpeg.on("log", ({ message }) => {
+  console.log("[FFmpeg]", message);
+});
+
 let loaded = false;
 
 export async function loadFFmpeg() {
