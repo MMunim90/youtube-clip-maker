@@ -146,6 +146,8 @@ const progressBlocks = document.getElementById("progressBlocks");
 
 const progressPercentage = document.getElementById("progressPercentage");
 
+const videoTitleElement = document.getElementById("videoTitle");
+
 // Initial button state
 startRecordingButton.disabled = false;
 stopRecordingButton.disabled = true;
@@ -194,6 +196,8 @@ detectVideoButton.addEventListener("click", async () => {
         }
 
         statusElement.textContent = "Video detected";
+
+        updateVideoTitle(response.title || "Unknown video");
 
         durationElement.textContent = formatTime(response.duration);
 
@@ -485,4 +489,29 @@ function updateConversionProgress(percentage, message) {
     "█".repeat(filledBlocks) + "░".repeat(emptyBlocks);
 
   progressPercentage.textContent = `${percentage}%`;
+}
+
+function updateVideoTitle(title) {
+  videoTitleElement.textContent = title;
+
+  // Reset previous animation
+  videoTitleElement.style.animation = "none";
+
+  // Force browser to recalculate
+  void videoTitleElement.offsetWidth;
+
+  const container = videoTitleElement.parentElement;
+
+  // Check if title is longer than container
+  if (videoTitleElement.scrollWidth > container.clientWidth) {
+    const distance = videoTitleElement.scrollWidth - container.clientWidth;
+
+    const duration = Math.max(5, distance / 30);
+
+    videoTitleElement.style.setProperty("--scroll-distance", `${distance}px`);
+
+    videoTitleElement.style.setProperty("--scroll-duration", `${duration}s`);
+
+    videoTitleElement.style.animation = `titleMarquee var(--scroll-duration) linear infinite`;
+  }
 }

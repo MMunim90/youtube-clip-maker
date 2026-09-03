@@ -155,3 +155,38 @@ button {
   text-align: center;
   font-weight: bold;
 }
+
+.video-title-container {
+  display: inline-block;
+  width: 220px;
+  overflow: hidden;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+
+#videoTitle {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+@keyframes titleMarquee {
+  0% {
+    transform: translateX(0);
+  }
+
+  45% {
+    transform: translateX(
+      calc(-1 * var(--scroll-distance))
+    );
+  }
+
+  55% {
+    transform: translateX(
+      calc(-1 * var(--scroll-distance))
+    );
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
