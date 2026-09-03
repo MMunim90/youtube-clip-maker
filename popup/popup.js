@@ -1,3 +1,25 @@
+import { loadFFmpeg } from "../dist/ffmpeg.js";
+
+const testFFmpegButton = document.getElementById("testFFmpeg");
+
+testFFmpegButton.addEventListener("click", async () => {
+  try {
+    console.log("Starting FFmpeg test...");
+
+    statusElement.textContent = "Loading FFmpeg...";
+
+    await loadFFmpeg();
+
+    statusElement.textContent = "FFmpeg Ready";
+
+    console.log("FFmpeg test successful.");
+  } catch (error) {
+    console.error("FFmpeg test failed:", error);
+
+    statusElement.textContent = "FFmpeg Error";
+  }
+});
+
 function timeToSeconds(timeString) {
   const parts = timeString.trim().split(":").map(Number);
 
