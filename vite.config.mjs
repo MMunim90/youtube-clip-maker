@@ -1,4 +1,6 @@
 import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 import { copyFileSync, mkdirSync } from "fs";
 import { resolve } from "path";
 
@@ -6,6 +8,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
+        popup: "index.html",
         ffmpeg: "recorder/ffmpeg.js",
       },
 
@@ -14,7 +17,13 @@ export default defineConfig({
       output: {
         format: "es",
 
-        entryFileNames: "ffmpeg.js",
+        entryFileNames: (chunkInfo) => {
+          if (chunkInfo.name === "ffmpeg") {
+            return "ffmpeg.js";
+          }
+
+          return "assets/[name].js";
+        },
 
         chunkFileNames: "assets/[name].js",
 
@@ -28,6 +37,8 @@ export default defineConfig({
   },
 
   plugins: [
+    react(),
+    tailwindcss(),
     {
       name: "copy-ffmpeg-core",
 
