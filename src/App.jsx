@@ -5,6 +5,7 @@ import TimeSelection from "./components/TimeSelection";
 import RecordingType from "./components/RecordingType";
 import DownloadType from "./components/DownloadType";
 import RecordingControls from "./components/RecordingControls";
+import ConversionProgress from "./components/ConversionProgress";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
       <RecordingType />
       <DownloadType />
       <RecordingControls />
+      <ConversionProgress />
     </main>
   );
 }
