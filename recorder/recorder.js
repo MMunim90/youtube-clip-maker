@@ -434,10 +434,12 @@ async function convertAudioToMP3(blob, onProgress) {
     await ffmpeg.exec([
       "-i",
       "input.webm",
+
       "-c:a",
       "libmp3lame",
-      "-b:a",
-      "192k",
+      "-q:a",
+      "0",
+
       "output.mp3",
     ]);
 
