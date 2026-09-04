@@ -1,6 +1,6 @@
 function RecordingType() {
   return (
-    <section className="mx-4 mt-4">
+    <section className="mx-4 mt-5">
       <div className="mb-3">
         <h2 className="text-sm font-semibold text-white">Recording Type</h2>
 
@@ -16,7 +16,7 @@ function RecordingType() {
             id="videoAudio"
             name="recordingType"
             type="radio"
-            value="video-audio"
+            value="video"
             defaultChecked
             className="h-4 w-4 accent-cyan-400"
           />
@@ -61,7 +61,7 @@ function RecordingType() {
             id="audioOnly"
             name="recordingType"
             type="radio"
-            value="audio-only"
+            value="audio"
             className="h-4 w-4 accent-cyan-400"
           />
 
