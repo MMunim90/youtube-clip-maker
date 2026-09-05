@@ -7,9 +7,7 @@ function ConversionProgress() {
       <div className="flex items-center gap-3">
         {/* Processing Icon */}
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-500/15">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full border-[5px] border-blue-400/25 border-t-cyan-400 border-r-blue-400">
-            <span className="text-xs text-cyan-300">↻</span>
-          </div>
+          <div className="h-8 w-8 animate-spin rounded-full border-[5px] border-blue-400/25 border-t-cyan-400 border-r-blue-400" />
         </div>
 
         {/* Progress Content */}

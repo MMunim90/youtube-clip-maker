@@ -438,6 +438,17 @@ startRecordingButton.addEventListener("click", async () => {
       },
 
       onStateChange: (state) => {
+        // ==============================
+        // Send state to React
+        // ==============================
+        window.dispatchEvent(
+          new CustomEvent("recording-state-changed", {
+            detail: {
+              isRecording: state === "recording" || state === "paused",
+            },
+          }),
+        );
+
         if (state === "recording") {
           startRecordingButton.disabled = true;
           stopRecordingButton.disabled = false;

@@ -44,7 +44,7 @@ function DownloadType() {
 
           <div className="h-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-center transition peer-checked:border-cyan-400/50 peer-checked:bg-cyan-400/10 hover:border-cyan-400/20 peer-disabled:cursor-not-allowed peer-disabled:opacity-30">
             <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-400">
-              ♪
+              ♫
             </div>
 
             <p className="mt-2 text-xs font-semibold text-white">Audio</p>
@@ -71,7 +71,7 @@ function DownloadType() {
 
             {/* Icon */}
             <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-400">
-              ◈
+              🌐︎
             </div>
 
             <p className="mt-2 text-xs font-semibold text-white">WebM</p>

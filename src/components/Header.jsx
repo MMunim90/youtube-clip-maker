@@ -1,7 +1,6 @@
 function Header() {
   return (
     <header className="relative mx-3 mt-2 overflow-hidden rounded-2xl border border-blue-500/30 bg-gradient-to-br from-[#0b1d46] via-[#081735] to-[#061128] shadow-[0_0_20px_rgba(37,99,235,0.12)]">
-
       {/* Soft background glow */}
       <div className="absolute -right-12 -bottom-16 h-28 w-56 rounded-full bg-blue-500/25 blur-3xl" />
 
@@ -16,7 +15,6 @@ function Header() {
 
       {/* Content */}
       <div className="relative flex min-h-[76px] items-center gap-3 px-3 py-2">
-
         {/* YouTube Logo */}
         <div className="flex h-[40px] w-[54px] shrink-0 items-center justify-center rounded-[10px] bg-[#ff1010] shadow-[0_4px_12px_rgba(255,0,0,0.20)]">
           <div className="ml-0.5 h-0 w-0 border-y-[7px] border-y-transparent border-l-[12px] border-l-white" />
