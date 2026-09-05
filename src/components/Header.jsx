@@ -17,12 +17,12 @@ function Header() {
         </div>
       </div>
 
-      <button
+      {/* <button
         className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/5 hover:text-white"
         aria-label="Settings"
       >
         ⚙
-      </button>
+      </button> */}
     </header>
   );
 }

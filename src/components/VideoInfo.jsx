@@ -27,12 +27,14 @@ function VideoInfo() {
           Video Title
         </p>
 
-        <p
-          id="videoTitle"
-          className="mt-1 truncate text-sm font-medium text-slate-200"
-        >
-          No video detected
-        </p>
+        <div className="mt-1 min-w-0 overflow-hidden">
+          <p
+            id="videoTitle"
+            className="inline-block whitespace-nowrap text-sm font-medium text-slate-200"
+          >
+            No video detected
+          </p>
+        </div>
       </div>
 
       {/* Duration + Current Time */}
@@ -46,7 +48,7 @@ function VideoInfo() {
             id="duration"
             className="mt-1 font-mono text-sm font-medium text-white"
           >
-            00:00:00
+            00:00
           </p>
         </div>
 
@@ -59,7 +61,7 @@ function VideoInfo() {
             id="currentTime"
             className="mt-1 font-mono text-sm font-medium text-white"
           >
-            00:00:00
+            00:00
           </p>
         </div>
       </div>

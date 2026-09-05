@@ -8,13 +8,20 @@ html,
 body,
 #root {
   margin: 0;
-  width: 100%;
+  width: 420px;
+  max-width: 420px;
   min-height: 100%;
+  overflow-x: hidden;
 }
 
 body {
+  width: 420px;
   min-width: 420px;
+  max-width: 420px;
+  overflow-x: hidden;
+
   background: #07111f;
+
   font-family:
     Inter,
     ui-sans-serif,

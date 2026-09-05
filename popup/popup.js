@@ -203,6 +203,104 @@ const startTimeInput = document.getElementById("startTime");
 
 const endTimeInput = document.getElementById("endTime");
 
+const setStartTimeButton = document.getElementById("setStartTime");
+
+const setEndTimeButton = document.getElementById("setEndTime");
+
+// Set Start Time to current YouTube time
+setStartTimeButton.addEventListener("click", async () => {
+  try {
+    const tabs = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+
+    const tab = tabs[0];
+
+    if (!tab || !tab.id) {
+      statusElement.textContent = "No active tab";
+      return;
+    }
+
+    chrome.tabs.sendMessage(
+      tab.id,
+      {
+        action: "GET_VIDEO_INFO",
+      },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.error(chrome.runtime.lastError.message);
+          statusElement.textContent = "Could not connect to YouTube.";
+          return;
+        }
+
+        if (!response || !response.success) {
+          statusElement.textContent = "Video not found.";
+          return;
+        }
+
+        const currentTime = response.currentTime;
+
+        startTimeInput.value = formatTime(currentTime);
+
+        startTimeInput.value = formatTime(currentTime);
+
+        statusElement.textContent = `Start time set to ${formatTime(currentTime)}`;
+      },
+    );
+  } catch (error) {
+    console.error(error);
+    statusElement.textContent = "Could not get current time.";
+  }
+});
+
+// Set End Time to current YouTube time
+setEndTimeButton.addEventListener("click", async () => {
+  try {
+    const tabs = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+
+    const tab = tabs[0];
+
+    if (!tab || !tab.id) {
+      statusElement.textContent = "No active tab";
+      return;
+    }
+
+    chrome.tabs.sendMessage(
+      tab.id,
+      {
+        action: "GET_VIDEO_INFO",
+      },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          console.error(chrome.runtime.lastError.message);
+          statusElement.textContent = "Could not connect to YouTube.";
+          return;
+        }
+
+        if (!response || !response.success) {
+          statusElement.textContent = "Video not found.";
+          return;
+        }
+
+        const currentTime = response.currentTime;
+
+        endTimeInput.value = formatTime(currentTime);
+
+        endTimeInput.value = formatTime(currentTime);
+
+        statusElement.textContent = `End time set to ${formatTime(currentTime)}`;
+      },
+    );
+  } catch (error) {
+    console.error(error);
+    statusElement.textContent = "Could not get current time.";
+  }
+});
+
 startTimeInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
     event.preventDefault();

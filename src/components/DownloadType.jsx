@@ -10,7 +10,7 @@ function DownloadType() {
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        {/* MP4 */}
+        {/* Video / MP4 */}
         <label className="cursor-pointer">
           <input
             id="downloadVideo"
@@ -21,7 +21,7 @@ function DownloadType() {
             className="peer sr-only"
           />
 
-          <div className="rounded-xl border border-white/10 bg-slate-900/60 p-3 text-center transition peer-checked:border-cyan-400/50 peer-checked:bg-cyan-400/10 hover:border-cyan-400/20">
+          <div className="h-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-center transition peer-checked:border-cyan-400/50 peer-checked:bg-cyan-400/10 hover:border-cyan-400/20 peer-disabled:cursor-not-allowed peer-disabled:opacity-30">
             <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-400">
               ▶
             </div>
@@ -32,7 +32,7 @@ function DownloadType() {
           </div>
         </label>
 
-        {/* MP3 */}
+        {/* Audio / MP3 */}
         <label className="cursor-pointer">
           <input
             id="downloadAudio"
@@ -42,7 +42,7 @@ function DownloadType() {
             className="peer sr-only"
           />
 
-          <div className="rounded-xl border border-white/10 bg-slate-900/60 p-3 text-center transition peer-checked:border-cyan-400/50 peer-checked:bg-cyan-400/10 hover:border-cyan-400/20">
+          <div className="h-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-center transition peer-checked:border-cyan-400/50 peer-checked:bg-cyan-400/10 hover:border-cyan-400/20 peer-disabled:cursor-not-allowed peer-disabled:opacity-30">
             <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-400">
               ♪
             </div>
@@ -63,7 +63,13 @@ function DownloadType() {
             className="peer sr-only"
           />
 
-          <div className="rounded-xl border border-white/10 bg-slate-900/60 p-3 text-center transition peer-checked:border-cyan-400/50 peer-checked:bg-cyan-400/10 hover:border-cyan-400/20">
+          <div className="relative h-full rounded-xl border border-white/10 bg-slate-900/60 p-3 text-center transition peer-checked:border-cyan-400/50 peer-checked:bg-cyan-400/10 hover:border-cyan-400/20 peer-disabled:cursor-not-allowed peer-disabled:opacity-30">
+            {/* Recommended Badge */}
+            <span className="absolute right-6 -top-3 z-10 rounded-full bg-cyan-400/10 px-2 py-1 text-[9px] font-semibold text-cyan-400">
+              Recommended
+            </span>
+
+            {/* Icon */}
             <div className="mx-auto flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-400">
               ◈
             </div>
