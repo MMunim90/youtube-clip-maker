@@ -5,6 +5,8 @@ import { copyFileSync, mkdirSync } from "fs";
 import { resolve } from "path";
 
 export default defineConfig({
+  base: "./",
+
   build: {
     rollupOptions: {
       input: {
@@ -39,6 +41,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+
     {
       name: "copy-ffmpeg-core",
 
