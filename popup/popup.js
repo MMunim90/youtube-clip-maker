@@ -675,19 +675,11 @@ function updateConversionProgress(percentage, message) {
 
   conversionStatus.textContent = message;
 
-  const totalBlocks = 20;
-
-  // Keep percentage safely between 0 and 100
   const safePercentage = Math.max(0, Math.min(100, Number(percentage) || 0));
 
-  const filledBlocks = Math.round((safePercentage / 100) * totalBlocks);
-
-  const emptyBlocks = totalBlocks - filledBlocks;
-
-  progressBlocks.textContent =
-    "█".repeat(filledBlocks) + "░".repeat(emptyBlocks);
-
   progressPercentage.textContent = `${Math.round(safePercentage)}%`;
+
+  conversionProgressBar.style.width = `${safePercentage}%`;
 }
 
 let titleAnimationFrame = null;
