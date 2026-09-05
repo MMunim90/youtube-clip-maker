@@ -1,4 +1,4 @@
-import { loadFFmpeg, ffmpeg } from "../dist/ffmpeg.js";
+import { loadFFmpeg, ffmpeg } from "./ffmpeg.js";
 const statusElement = document.getElementById("status");
 
 let mediaRecorder = null;

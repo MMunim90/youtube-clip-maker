@@ -15,7 +15,7 @@ export async function loadFFmpeg() {
 
   const baseURL = chrome.runtime.getURL("libs/ffmpeg");
 
-  const workerURL = chrome.runtime.getURL("dist/assets/worker-BzdDEeh7.js");
+  const workerURL = chrome.runtime.getURL("assets/worker-BzdDEeh7.js");
 
   const coreURL = `${baseURL}/ffmpeg-core.js`;
 

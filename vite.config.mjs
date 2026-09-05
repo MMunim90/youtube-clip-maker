@@ -1,13 +1,19 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { copyFileSync, mkdirSync } from "fs";
+
+import { copyFileSync, cpSync, mkdirSync } from "fs";
+
 import { resolve } from "path";
 
 export default defineConfig({
   base: "./",
 
   build: {
+    outDir: "dist",
+
+    emptyOutDir: true,
+
     rollupOptions: {
       input: {
         popup: "index.html",
@@ -32,15 +38,62 @@ export default defineConfig({
         assetFileNames: "assets/[name][extname]",
       },
     },
-
-    outDir: "dist",
-
-    emptyOutDir: true,
   },
 
   plugins: [
     react(),
     tailwindcss(),
+
+    {
+      name: "copy-static-extension-files",
+
+      closeBundle() {
+        const distDir = resolve("dist");
+
+        /*
+         * Copy manifest.json
+         */
+        copyFileSync(
+          resolve("manifest.json"),
+          resolve(distDir, "manifest.json"),
+        );
+
+        /*
+         * Copy icons
+         */
+        cpSync(resolve("icons"), resolve(distDir, "icons"), {
+          recursive: true,
+        });
+
+        /*
+         * Copy content scripts
+         */
+        cpSync(resolve("content"), resolve(distDir, "content"), {
+          recursive: true,
+        });
+
+        /*
+         * Copy background scripts
+         */
+        cpSync(resolve("background"), resolve(distDir, "background"), {
+          recursive: true,
+        });
+
+        /*
+         * Copy recorder scripts
+         */
+        mkdirSync(resolve(distDir, "recorder"), {
+          recursive: true,
+        });
+
+        copyFileSync(
+          resolve("recorder/recorder.js"),
+          resolve(distDir, "recorder/recorder.js"),
+        );
+
+        console.log("Static extension files copied successfully.");
+      },
+    },
 
     {
       name: "copy-ffmpeg-core",
